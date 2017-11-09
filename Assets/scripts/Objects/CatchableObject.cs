@@ -20,7 +20,7 @@ public class CatchableObject : MonoBehaviour
 
 
     //Behaviour Logic
-    private delegate void _Logic (float dt);
+    private delegate void _Logic(float dt);
     private _Logic _logic = null;
 
     private void Awake()
@@ -31,7 +31,7 @@ public class CatchableObject : MonoBehaviour
     }
 
     // Use this for initialization
-    void Start()    
+    void Start()
     {
 
     }
@@ -40,9 +40,9 @@ public class CatchableObject : MonoBehaviour
     void Update()
     {
         //update Logic
-        if(_logic != null) _logic(Time.deltaTime);
+        if (_logic != null) _logic(Time.deltaTime);
     }
-    
+
     // Logic Uncatched Idle
     private void _logic_released(float dt)
     {
@@ -68,8 +68,12 @@ public class CatchableObject : MonoBehaviour
         transform.parent = Hand.transform;
 
         //setup Rigidbody
-        __Rigidbody.useGravity = false;
+        //__Rigidbody.useGravity = false;
         __Rigidbody.constraints = RigidbodyConstraints.FreezeAll;
+
+        //set Target Transform
+        __TargetPosition = transform.localPosition;
+        __TargetRotation = transform.localEulerAngles;
 
         //set Logic
         _logic = _logic_grabbed;
@@ -77,15 +81,21 @@ public class CatchableObject : MonoBehaviour
 
     public void Release(Vector3 velocity)
     {
+        //if it is already released, continue;
+        if (transform.parent == __ReleasedParent) return;
         //set Parent
-        transform.parent = null;
+        transform.parent = __ReleasedParent;
 
         //setup Rigidbody
-        __Rigidbody.useGravity = true;
+        //__Rigidbody.useGravity = true;
         __Rigidbody.constraints = RigidbodyConstraints.None;
         __Rigidbody.velocity = velocity;
+        __Rigidbody.AddTorque(Random.rotation.eulerAngles * 0.1f);
 
         //set Logic
         _logic = _logic_released;
     }
+
+    public bool IsParent(Transform target) { return transform.parent == target; }
+    public bool IsGrabbed() { return transform.parent != __ReleasedParent; }
 }

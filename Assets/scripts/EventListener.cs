@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class EventListener : MonoBehaviour {
 
+    //moving direction;
+
 	// Use this for initialization
 	void Start () {
 		

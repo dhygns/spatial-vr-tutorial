@@ -4,6 +4,14 @@ using UnityEngine;
 
 public class AvatarHand : MonoBehaviour {
 
+    // Avatar Hand Status
+    private enum STATUS
+    {
+        idle, grab
+    }
+    private STATUS __Status = STATUS.idle;
+
+
     //velocity
     private Queue<Vector3> __QPosition;
     private Vector3 __PrevPosition = Vector3.zero;
@@ -72,6 +80,13 @@ public class AvatarHand : MonoBehaviour {
 
     public void Grab()
     {
+        // if this status is already "grab", continue
+        if (__Status == STATUS.grab) return;
+        __Status = STATUS.grab;
+
+        // if already something is grabbed, continue
+        if (__Grabbed != null) return;
+
         // if there is no candidate, dosen't work anything
         if (__Candidates.Count == 0) return;
 
@@ -81,12 +96,14 @@ public class AvatarHand : MonoBehaviour {
 
         __Candidates.ForEach((CatchableObject co) =>
         {
+            if (co == null || co.IsGrabbed()) return;
             if (tmpcobj == null)
             {
                 tmpcobj = co;
             }
             else
             {
+                Debug.Log(co);
                 float dist = (transform.position - co.transform.position).sqrMagnitude;
                 if(tmpdist > dist)
                 {
@@ -98,15 +115,37 @@ public class AvatarHand : MonoBehaviour {
 
         if(tmpcobj != null)
         {
+            //do grab motion
             tmpcobj.Grab(gameObject);
-            __Grabbed = tmpcobj;
+            
+            //set grabbed object
+            __Grabbed = tmpcobj;    
         }
     }
 
     public void Release()
     {
+        //set status
+        __Status = STATUS.idle;
+
+        //null check
         if (__Grabbed == null) return;
-        __Grabbed.Release(__AvgVelocity);
-        __Grabbed = null;
+
+        //Grabbed Object's parent check
+        if (__Grabbed.IsParent(transform))
+        {
+            //release object
+            __Grabbed.Release(__AvgVelocity);
+
+            //get return object & set return target
+            ReturnObject tmprobj = __Grabbed.gameObject.GetComponent<ReturnObject>();
+            tmprobj.setTargetToReturn(transform);
+
+            __Grabbed = null;
+        } else
+        {
+            __Grabbed = null;
+        }
+
     }
 }
